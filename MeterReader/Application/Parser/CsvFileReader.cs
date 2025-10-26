@@ -45,10 +45,15 @@ public class CsvFileReader : IFileReader
         while (await csv.ReadAsync())
         {
             var rowNumber = 0;
-            if (csv.Context.Parser != null)
+            if (csv.Context.Parser == null)
             {
-                rowNumber = csv.Context.Parser.Row;
+                errors.Add(new FileReaderRowError(rowNumber,
+                    $"Unable to access context parser.", "")
+                );
+                continue;
             }
+            rowNumber = csv.Context.Parser.Row;
+
             var actualColumns = csv.Context.Parser.Count;
             if (actualColumns != expectedColumns)
             {

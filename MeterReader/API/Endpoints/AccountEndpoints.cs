@@ -27,13 +27,5 @@ public static class AccountEndpoints
             .Produces(404)
             .WithTags(Tag)
             .WithDescription("Get all accounts");
-        
-        app.MapPost($"{Route}", (
-                    [FromServices] IAccountService accountService) =>
-                accountService.GetAllAsync())
-            .Produces(201)
-            .Produces(400)
-            .WithTags(Tag)
-            .WithDescription("Create a new account");
     }
 }

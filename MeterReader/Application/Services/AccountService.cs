@@ -1,21 +1,17 @@
 ﻿using Application.Interfaces;
+using Domain.Entities;
 
 namespace Application.Services;
 
-public class AccountService : IAccountService
+public class AccountService(IAccountRepository accountRepository) : IAccountService
 {
-    public Task CreateAsync(int accountId, string firstName, string lastName)
+    public async Task<Account?> GetAsync(int accountId)
     {
-        throw new NotImplementedException();
+        return await accountRepository.GetAsync(accountId);
     }
 
-    public Task GetAsync(int accountId)
+    public async Task<IEnumerable<Account>> GetAllAsync()
     {
-        throw new NotImplementedException();
-    }
-
-    public Task GetAllAsync()
-    {
-        throw new NotImplementedException();
+        return await accountRepository.GetAllAsync();
     }
 }

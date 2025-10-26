@@ -26,7 +26,7 @@ public class MeterReadingService(IFileProcessor processor, IMeterReadingValidato
             Console.WriteLine(ex.Message);
         }
 
-        foreach (var row in successes)
+        foreach (var row in successes.ToList())
         {
             var validate = await validator.ValidateAsync(row);
             if (validate.success)
@@ -35,6 +35,7 @@ public class MeterReadingService(IFileProcessor processor, IMeterReadingValidato
             }
             else
             {
+                successes.Remove(row);
                 errors.Add(new FileReaderRowError(
                     row.RowNumber,
                     validate.Errors.FirstOrDefault() ?? "Unknown error",

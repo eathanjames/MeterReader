@@ -10,11 +10,18 @@ public class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder> logger
 {
     public async Task SeedDataAsync()
     {
+        if (await context.MeterReadings.AnyAsync())
+        {
+            await context.MeterReadings.ExecuteDeleteAsync();
+        }
+        
+        
         if (await context.Accounts.AnyAsync())
         {
             logger.LogInformation("Accounts already seeded");
             return;
         }
+        
 
         var path = Path.Combine(AppContext.BaseDirectory, "Data", "test-accounts.csv");
 
