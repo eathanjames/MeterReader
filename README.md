@@ -18,8 +18,13 @@ Validation Rules:
 - For accounts with existing readings, new readings must not be older than the latest recorded reading.
 
 
+Made use of a library for CSV file reading documentation seen here;
+https://joshclose.github.io/CsvHelper
+
 
 AI
 Access to JetBrains AI and Chatgpt.
 JetBrains AI used for autocompletion and checking primary unit test coverage.
-Chatgpt used for sense checking and error debugging.
+Chatgpt used for sense checking and error debugging as well as rewording some text such as the above.
+
+
