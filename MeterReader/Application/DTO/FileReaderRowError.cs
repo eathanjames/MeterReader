@@ -1,6 +1,6 @@
 ﻿namespace Application.DTO;
 
-public record RowError(
+public record FileReaderRowError(
     int RowNumber,
     string ErrorMessage,
     string RawLine

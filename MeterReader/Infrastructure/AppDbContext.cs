@@ -10,7 +10,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<MeterReading>()
-            .HasNoKey();
+        modelBuilder.Entity<MeterReading>().HasKey(m => new { m.AccountId, m.MeterReadingDateTime, m.MeterReadValue });
     }
 }

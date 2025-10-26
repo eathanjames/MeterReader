@@ -23,4 +23,9 @@ public class AccountRepository(AppDbContext context) : IAccountRepository
         //Limit to 100 for now for safety, but this would be configurable.
         return await context.Accounts.Take(100).ToListAsync();
     }
+
+    public async Task<bool> ExistsAsync(int accountId)
+    {
+        return await context.Accounts.AnyAsync(a => a.AccountId == accountId);
+    }
 }

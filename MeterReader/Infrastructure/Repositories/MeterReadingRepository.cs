@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
@@ -11,19 +12,21 @@ public class MeterReadingRepository(AppDbContext context) : IMeterReadingReposit
         
         await context.SaveChangesAsync();
     }
-
-    public Task<MeterReading?> GetAsync(int accountId)
+    
+    public async Task<IEnumerable<MeterReading>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await context.MeterReadings.Take(100).ToListAsync();
     }
-
-    public Task<IEnumerable<MeterReading>> GetAllAsync()
+    
+    public async Task<bool> ExistsAsync(int accountId, DateTime date, string meterReading)
     {
-        throw new NotImplementedException();
+        return await context.MeterReadings.AnyAsync(a =>
+                a.AccountId == accountId && a.MeterReadingDateTime == date && a.MeterReadValue == meterReading);
     }
-
-    public Task<bool> UpdateAsync(MeterReading meterReading)
+    
+    public async Task<bool> NewerExistsAsync(int accountId, DateTime date, string meterReading)
     {
-        throw new NotImplementedException();
+        return await context.MeterReadings.AnyAsync(a =>
+            a.AccountId == accountId && a.MeterReadingDateTime < date && a.MeterReadValue == meterReading);
     }
 }

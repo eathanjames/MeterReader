@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.DTO;
+using Application.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +15,16 @@ public static class MeterReaderEndpoints
     {
         app.MapPost($"{Route}/meter-reading-uploads", (
                 [FromServices] IMeterReadingService meterService,
-                IFormFile file) => meterService.ProcessFileAsync(file))
-            .Produces<Account>()
+                IFormFile file) => meterService.ProcessMeterReadingFileAsync(file))
+            .Produces<FileReaderUploadResult<MeterReadRow>>()
+            .Produces(404)
+            .WithTags(Tag)
+            .WithDescription("Get account by id")
+            .DisableAntiforgery();
+        
+        app.MapGet($"{Route}", (
+                [FromServices] IMeterReadingService meterService) => meterService.GetAllAsync())
+            .Produces<IEnumerable<MeterReading>>()
             .Produces(404)
             .WithTags(Tag)
             .WithDescription("Get account by id")

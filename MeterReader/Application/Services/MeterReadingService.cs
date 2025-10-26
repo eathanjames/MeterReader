@@ -1,70 +1,56 @@
-﻿using System.Globalization;
-using Application.DTO;
+﻿using Application.DTO;
 using Application.Interfaces;
 using Application.Mappings;
-using CsvHelper;
-using CsvHelper.Configuration;
+using Domain.Entities;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 
 namespace Application.Services;
 
-public class MeterReadingService : IMeterReadingService
+public class MeterReadingService(IFileProcessor processor, IMeterReadingValidator validator, IMeterReadingRepository meterReadingRepository) : IMeterReadingService
 {
-    public async Task<MeterReadingUploadResult> ProcessFileAsync(IFormFile file)
+    public async Task<FileReaderUploadResult<MeterReadRow>> ProcessMeterReadingFileAsync(IFormFile file)
     { 
-        var result = new MeterReadingUploadResult();
-        var records = new List<MeterReadRow>();
-        var failures = new List<RowError>();
-
-        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        var result = new FileReaderUploadResult<MeterReadRow>();
+        var successes = new List<MeterReadRow>();
+        var errors = new List<FileReaderRowError>();
+        try
         {
-            //Make header lower to prevent issues with possible inconsistent header namings.
-            PrepareHeaderForMatch = args => args.Header.ToLower(),
-            HasHeaderRecord = true,
-            TrimOptions = TrimOptions.Trim,
-            BadDataFound = null,
-            MissingFieldFound = null
-        };
-        
-        using var reader = new StreamReader(file.OpenReadStream());
-        using var csv = new CsvReader(reader, config);
-
-        csv.Context.RegisterClassMap<MeterReadCsvMap>();
-        
-        await csv.ReadAsync();
-        csv.ReadHeader();
-        
-        var expectedColumns = csv.HeaderRecord?.Length ?? 3;
-        
-        while (await csv.ReadAsync())
+            var processedFiles = await processor.ProcessFileAsync(file);
+            successes = processedFiles.success;
+            errors = processedFiles.Errors;
+        }
+        catch(FileReaderException ex)
         {
-            var actualColumns = csv.Context.Parser.Count;
-            if (actualColumns != expectedColumns)
-            {
-                failures.Add(new RowError(csv.Context.Parser.Row,
-                    $"Incorrect number of columns expected: {expectedColumns}, actual: {actualColumns}",
-                    csv.Context.Parser.RawRecord)
-                );
-                continue;
-            }
+            //This needs to bubble up later.
+            Console.WriteLine(ex.Message);
+        }
 
-            try
+        foreach (var row in successes)
+        {
+            var validate = await validator.ValidateAsync(row);
+            if (validate.success)
             {
-                var record = csv.GetRecord<MeterReadRow>();
-                records.Add(record);
+                await meterReadingRepository.CreateAsync(row.ToMeterReading());
             }
-            catch (Exception e)
+            else
             {
-                failures.Add(new RowError(csv.Context.Parser.Row,
-                    $"Encountered error {e.Message}.",
-                    csv.Context.Parser.RawRecord)
-                );
+                errors.Add(new FileReaderRowError(
+                    row.RowNumber,
+                    validate.Errors.FirstOrDefault() ?? "Unknown error",
+                    $"{row.AccountId}, {row.MeterReadingDateTime}, {row.MeterReadValue}"
+                ));
             }
         }
-        
-        result.Successful = records;
-        result.Failures = failures; 
+
+        result.Successful = successes;
+        result.Failures = errors;
         
         return result;
+    }
+
+    public async Task<IEnumerable<MeterReading>> GetAllAsync()
+    {
+        return await meterReadingRepository.GetAllAsync();
     }
 }
